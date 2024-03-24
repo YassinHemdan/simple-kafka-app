@@ -1,0 +1,27 @@
+[
+	{
+		"id": 1,
+		"customer": 1,
+		"category": "lenovo ideapad_3"
+	},
+	{
+		"id": 2,
+		"customer": 1,
+		"category": "iphone 15"
+	},
+	{
+		"id": 3,
+		"customer": 2,
+		"category": "television"
+	},
+	{
+		"id": 4,
+		"customer": 2,
+		"category": "PS5"
+	},
+	{
+		"id": 5,
+		"customer": 3,
+		"category": "Jacket"
+	}
+]

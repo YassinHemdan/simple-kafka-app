@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: consumer_app
+
+  kafka:
+    bootstrap-servers: localhost:8097,localhost:8099,localhost:8098
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.example.*
+        spring.json.type.mapping: OrderDTO:com.example.consumer_app.dtos.OrderDTO
+
+  server:
+    port: 7071
