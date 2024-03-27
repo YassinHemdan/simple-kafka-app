@@ -1,0 +1,85 @@
+version: "3.8"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.2.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+  
+  kafka1:
+    image: confluentinc/cp-kafka:7.2.1
+    container_name: kafka1
+    ports:
+      - "8097:8097"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:8097,INTERNAL://kafka1:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+  
+  kafka2:
+    image: confluentinc/cp-kafka:7.2.1
+    container_name: kafka2
+    ports:
+      - "8098:8098"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:8098,INTERNAL://kafka2:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.2.1
+    container_name: kafka3
+    ports:
+      - "8099:8099"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:8099,INTERNAL://kafka3:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+
+  db:
+    build: ./database
+    container_name: DB
+    restart: always
+    ports:
+      - "54320:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    
+  app:
+    build: .
+    container_name: producer
+    restart: always
+    ports:
+      - "7072:7072"
+    depends_on:
+      - db
+      - kafka1
+      - kafka2
+      - kafka3
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/e-commerce
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka3:9092,kafka2:9092,kafka1:9092
+      - SPRING_KAFKA_PRODUCER_KEY_SERIALIZER=org.apache.kafka.common.serialization.StringSerializer
+      - SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER=org.springframework.kafka.support.serializer.JsonSerializer
+      - SPRING_KAFKA_PRODUCER_OUTBOUND_TOPIC=order-purchased-topic
+      - SPRING_KAFKA_CONSUMER_GROUP_ID=notification-group
+      - SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET=earliest
+      - SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER=org.apache.kafka.common.serialization.StringDeserializer
+      - SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER=org.springframework.kafka.support.serializer.JsonDeserializer
+      - SERVER_PORT=7072
